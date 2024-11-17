@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:rocketchatapp/screens/login_screen.dart';
+import 'package:rocketchatapp/screens/search_screen.dart';
 import '../services/api_service.dart';
 import '../widgets/channel_widget.dart';
+import '../widgets/home_widget.dart';
 import 'chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String authToken;
   final String userId;
   final String username;
-  final String email;
-  final String avatarUrl;
 
   const HomeScreen({
     super.key,
     required this.authToken,
     required this.userId,
     required this.username,
-    required this.email,
-    required this.avatarUrl,
   });
 
   @override
@@ -27,23 +27,25 @@ class _HomeScreenState extends State<HomeScreen> {
   final ApiService apiService = ApiService();
   List<dynamic> channels = [];
   bool isLoading = false;
+  String selectedItem = 'Chat'; // Mục mặc định được chọn
 
   @override
   void initState() {
     super.initState();
-    fetchChannels();
+    fetchChannelsJoined();
+  
   }
 
-  Future<void> fetchChannels() async {
+  Future<void> fetchChannelsJoined() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      final fetchedChannels =
-          await apiService.fetchChannels(widget.authToken, widget.userId);
+      final fetchedChannelsJoined =
+          await apiService.getJoinedChannels(widget.authToken, widget.userId);
       setState(() {
-        channels = fetchedChannels;
+        channels = fetchedChannelsJoined;
       });
     } catch (e) {
       print('Error fetching channels: $e');
@@ -62,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
         channelId,
       );
 
-      final roomId = channelInfo['_id']; // Lấy RoomID từ channel info
+      final roomId = channelInfo['_id'];
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -71,8 +73,6 @@ class _HomeScreenState extends State<HomeScreen> {
             authToken: widget.authToken,
             userId: widget.userId,
             username: widget.username,
-            email: widget.email,
-            avatarUrl: widget.avatarUrl,
           ),
         ),
       );
@@ -102,10 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
               final channelName = channelNameController.text.trim();
               if (channelName.isNotEmpty) {
                 try {
-                  Navigator.pop(context); // Đóng dialog
+                  Navigator.pop(context);
                   await apiService.createChannel(
                       widget.authToken, widget.userId, channelName);
-                  fetchChannels(); // Cập nhật danh sách channels
+                  fetchChannelsJoined();
                 } catch (e) {
                   print('Error creating channel: $e');
                 }
@@ -118,57 +118,136 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> logOut() async {
+    try {
+      await apiService.logOut(widget.authToken, widget.userId);
+      
+    } catch (e) {
+      print('Error logging out: $e');
+    }
+  }
+
+  void onDrawerItemSelected(String item) {
+    setState(() {
+      selectedItem = item;
+    });
+
+    if (item == 'Chat') {
+      Navigator.pop(context); // Đóng Drawer
+      // Đảm bảo quay lại màn hình Home khi bấm Chat
+    }
+
+    if(item == 'Logout') {
+      logOut();
+      Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginScreen(), // Điều hướng đến LoginScreen
+      ),
+      );
+    }
+  }
+
+  
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundImage: NetworkImage(widget.avatarUrl),
-              radius: 18,
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text(
+            'Rocket.Chat',
+            style: TextStyle(
+              fontFamily: 'Time New Roman',
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(width: 10),
+          ),
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            ),
+          ),
+        ),
+        drawer: AppDrawer(
+          username: widget.username,
+          selectedItem: selectedItem,
+          onItemSelected: onDrawerItemSelected,
+        ),
+        body: Stack(
+          children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.username,
-                  style: const TextStyle(fontSize: 16),
+                // Tiêu đề "😊 Channels" và nút Create (+)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "😊 Channels",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(221, 23, 21, 163),
+                        ),
+                      ),
+
+                      const SizedBox(width: 120),
+
+                      IconButton(
+                        icon: const Icon(Icons.search_outlined, color: Colors.blue),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SearchScreen(
+                                authToken: widget.authToken,
+                                userId: widget.userId,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+
+                      IconButton(
+                        icon: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
+                        onPressed: createChannel,
+                      ),
+                    ],
+                  ),
                 ),
-                Text(
-                  widget.email,
-                  style: const TextStyle(fontSize: 12, color: Colors.black),
+                // Danh sách các kênh
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: channels.length,
+                    itemBuilder: (context, index) {
+                      final channel = channels[index];
+                      return ChannelWidget(
+                        channelName: channel['name'],
+                        onTap: () => navigateToChat(channel['_id']),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
+            if (isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: createChannel, // Gọi hàm tạo channel
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          ListView.builder(
-            itemCount: channels.length,
-            itemBuilder: (context, index) {
-              final channel = channels[index];
-              return ChannelWidget(
-                channelName: channel['name'],
-                onTap: () => navigateToChat(channel['_id']), // Truyền channelId
-              );
-            },
-          ),
-          if (isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
-        ],
       ),
     );
   }
+
+
 }

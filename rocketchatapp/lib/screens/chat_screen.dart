@@ -6,8 +6,8 @@ class ChatScreen extends StatefulWidget {
   final String authToken;
   final String userId;
   final String username;
-  final String email;
-  final String avatarUrl;
+  //final String email;
+  //final String avatarUrl;
   final String roomId;
 
   const ChatScreen({
@@ -15,8 +15,8 @@ class ChatScreen extends StatefulWidget {
     required this.authToken,
     required this.userId,
     required this.username,
-    required this.email,
-    required this.avatarUrl,
+    //required this.email,
+    //required this.avatarUrl,
     required this.roomId,
   });
 
@@ -125,13 +125,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        title: const Row(
           children: [
-            CircleAvatar(
-              backgroundImage: NetworkImage(widget.avatarUrl),
-            ),
-            const SizedBox(width: 8),
-            Column(
+            /*Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(widget.username, style: const TextStyle(fontSize: 16)),
@@ -140,7 +136,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   style: const TextStyle(fontSize: 12, color: Colors.white70),
                 ),
               ],
-            ),
+            ),*/
           ],
         ),
       ),
