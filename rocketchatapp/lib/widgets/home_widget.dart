@@ -81,18 +81,18 @@ class AppDrawer extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Container(
-      color: isSelected ? Colors.grey.shade300 : Colors.transparent, // Màu nền khi được chọn
+      color: isSelected ? Colors.grey.shade300 : Colors.transparent,
       child: ListTile(
         leading: Icon(
           icon,
-          color: isSelected ? Colors.black : Colors.grey, // Đổi màu icon khi được chọn
+          color: isSelected ? Colors.black : Colors.grey,
         ),
         title: Text(
           title,
           style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, // In đậm khi được chọn
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, 
             fontSize: 16,
-            color: isSelected ? Colors.black : Colors.grey, // Đổi màu chữ khi được chọn
+            color: isSelected ? Colors.black : Colors.grey,
           ),
         ),
         onTap: onTap,

@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ApiService apiService = ApiService();
   List<dynamic> channels = [];
   bool isLoading = false;
-  String selectedItem = 'Chat'; // Mục mặc định được chọn
+  String selectedItem = 'Chat';
 
   @override
   void initState() {
@@ -65,7 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       final roomId = channelInfo['_id'];
-      Navigator.push(
+      
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ChatScreen(
@@ -76,6 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       );
+      if(result == 'refresh') {
+        fetchChannelsJoined();
+      }
     } catch (e) {
       print('Error navigating to chat: $e');
     }
@@ -87,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create New Channel'),
+        title: const Text('Create New Channel', style: TextStyle(fontWeight: FontWeight.bold),),
         content: TextField(
           controller: channelNameController,
           decoration: const InputDecoration(hintText: 'Enter channel name'),
@@ -95,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Colors.red, fontSize: 17)),
           ),
           TextButton(
             onPressed: () async {
@@ -111,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               }
             },
-            child: const Text('Create'),
+            child: const Text('Create', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 17)),
           ),
         ],
       ),
@@ -133,8 +137,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     if (item == 'Chat') {
-      Navigator.pop(context); // Đóng Drawer
-      // Đảm bảo quay lại màn hình Home khi bấm Chat
+      Navigator.pop(context);
+      
     }
 
     if(item == 'Logout') {
@@ -155,11 +159,13 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: const Text(
+          title: Text(
             'Rocket.Chat',
             style: TextStyle(
               fontFamily: 'Time New Roman',
               fontWeight: FontWeight.bold,
+              fontSize: 25,
+              color: Colors.blue.shade700,
             ),
           ),
           leading: Builder(
@@ -181,46 +187,59 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Tiêu đề "😊 Channels" và nút Create (+)
+                
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        "😊 Channels",
+                        "😊 Channel Joined",
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color.fromARGB(221, 23, 21, 163),
                         ),
                       ),
-
-                      const SizedBox(width: 120),
-
-                      IconButton(
-                        icon: const Icon(Icons.search_outlined, color: Colors.blue),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SearchScreen(
-                                authToken: widget.authToken,
-                                userId: widget.userId,
+                      //const SizedBox(width: 120),
+                      Container(
+                        width: 120,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                          IconButton(
+                          icon: const Icon(Icons.search_outlined, color: Colors.blue),
+                          onPressed: () async {
+                            
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchScreen(
+                                  authToken: widget.authToken,
+                                  userId: widget.userId,
+                                  username: widget.username,
+                                ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                            if (result == 'refresh') {
+                              fetchChannelsJoined(); 
+                            }
+                          },
+                          
+                          ),
+                          IconButton(
+                          icon: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
+                          onPressed: createChannel,
+                        ),
+                      ],
                       ),
-
-
-                      IconButton(
-                        icon: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
-                        onPressed: createChannel,
                       ),
                     ],
+                    ),
+              
                   ),
-                ),
+                  
+                
                 // Danh sách các kênh
                 Expanded(
                   child: ListView.builder(

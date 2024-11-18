@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class MessageWidget extends StatelessWidget {
-  final String sender; // Tên người gửi
-  final String message; // Nội dung tin nhắn
-  final bool isCurrentUser; // Xác định tin nhắn này có phải của người dùng hiện tại không
+  final String sender;
+  final String message;
+  final bool isCurrentUser; 
 
   const MessageWidget({
     super.key,

@@ -14,8 +14,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final ApiService apiService = ApiService();
-  bool rememberMe = false; // Trạng thái checkbox
-  bool _isPasswordVisible = false; // Trạng thái hiển thị mật khẩu
+  bool rememberMe = false; 
+  bool _isPasswordVisible = false; 
 
   Future<void> _login() async {
     try {
@@ -29,13 +29,13 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Gọi API để đăng nhập
+      
       final response = await apiService.loginWithUsernamePassword(username, password);
       final authToken = response['authToken'];
       final userId = response['userId'];
       final usernameRes = response['username'];
 
-      // Điều hướng sang HomeScreen
+      
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -62,12 +62,12 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo ở giữa
+              
               const SizedBox(height: 70),
               const LogoWidget(),
               const SizedBox(height: 50),
 
-              // Form nhập username
+              
               RoundedTextField(
                 controller: usernameController,
                 hintText: 'Username',
@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Checkbox "Remember me" và link "Forgot password?"
+              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      // Logic quên mật khẩu (chưa implement)
+                      
                     },
                     child: const Text(
                       'Forgot password?',
