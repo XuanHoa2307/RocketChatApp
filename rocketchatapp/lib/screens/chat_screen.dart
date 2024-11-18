@@ -309,12 +309,12 @@ Future<void> sendMessage() async {
           child: Icon(
             isJoined ? Icons.send : Icons.login,
             color: Colors.white,
+            ),
           ),
         ),
       ),
-    ),
-  ],
-),
+    ],
+  ),
 
 
 
