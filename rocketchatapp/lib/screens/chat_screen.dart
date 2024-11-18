@@ -10,6 +10,7 @@ class ChatScreen extends StatefulWidget {
   //final String email;
   //final String avatarUrl;
   final String roomId;
+  final String channelName;
 
   const ChatScreen({
     super.key,
@@ -19,6 +20,7 @@ class ChatScreen extends StatefulWidget {
     //required this.email,
     //required this.avatarUrl,
     required this.roomId,
+    required this.channelName,
   });
 
   @override
@@ -31,7 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isSending = false;
   late Timer _messageFetchTimer;
   DateTime? lastMessageTimestamp;
-
+  
   List<dynamic> messages = [];
   bool isLoading = false;
   bool isJoined = false; // Trạng thái đã join hay chưa
@@ -204,27 +206,17 @@ Future<void> sendMessage() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Row(
-          children: [
-            /*Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.username, style: const TextStyle(fontSize: 16)),
-                Text(
-                  widget.email,
-                  style: const TextStyle(fontSize: 12, color: Colors.white70),
-                ),
-              ],
-            ),*/
-          ],
-        ),
+        backgroundColor: Colors.blueAccent,
+        title: Text(
+        '# ${widget.channelName}', 
+        style: const TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 255, 255, 255)),
+      ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back), 
           onPressed: () {
-            
             Navigator.pop(context,'refresh');
-            
           },
         ),
       ),
@@ -233,43 +225,98 @@ Future<void> sendMessage() async {
           Column(
             children: [
               Expanded(
-                child: ListView.builder(
-                  reverse: true,
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    return MessageWidget(
-                      sender: message['u']['username'],
-                      message: message['msg'],
-                      isCurrentUser: message['u']['username'] == widget.username,
-                    );
-                  },
-                ),
+              child: ListView.builder(
+                reverse: true,
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final message = messages[index];
+                  final isCurrentUser = message['u']['username'] == widget.username;
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      
+                      if (!isCurrentUser)
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+                          child: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: Colors.blue[300], // Màu nền avatar
+                            child: const Icon(Icons.person, size: 16, color: Colors.white),
+                          ),
+                        ),
+                      Expanded(
+                        child: MessageWidget(
+                          sender: message['u']['username'],
+                          message: message['msg'],
+                          isCurrentUser: isCurrentUser,
+                        ),
+                      ),
+                      
+                    ],
+                  );
+                },
               ),
+            ),
+
               Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: messageController,
-                    enabled: isJoined,
-                    decoration: InputDecoration(
-                      hintText: isSending ? 'Sending...' : 'Type a message...',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(isJoined ? Icons.send : Icons.login),
-                  onPressed: () async {
-                    if (isJoined) {
-                      await sendMessage();
-                    } else {
-                      await joinChannel();
-                    }
-                  },
-                ),
-              ],
-              ),
+  children: [
+    Expanded(
+      child: Container(
+        margin: const EdgeInsets.only(left: 10, bottom: 10, top: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          color: Colors.white, 
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3), 
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, 3), 
+            ),
+          ],
+          border: Border.all(
+            color: Colors.grey.shade100,
+            width: 1.5, 
+          ),
+        ),
+        child: TextField(
+          controller: messageController,
+          enabled: isJoined,
+          decoration: InputDecoration(
+            hintText: isSending ? 'Sending...' : 'Type your message here...',
+            hintStyle: TextStyle(color: isJoined ? Colors.grey : Colors.grey.shade400, fontFamily: 'Time New Roman'),
+            border: InputBorder.none,
+          ),
+        ),
+      ),
+    ),
+    const SizedBox(width: 10),
+    Container(
+      margin: const EdgeInsets.only(right: 10, bottom: 10, top: 10),
+      child: InkWell(
+        onTap: () async {
+          if (isJoined) {
+            await sendMessage();
+          } else {
+            await joinChannel();
+          }
+        },
+        child: CircleAvatar(
+          radius: 25,
+          backgroundColor: Colors.blue,
+          child: Icon(
+            isJoined ? Icons.send : Icons.login,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    ),
+  ],
+),
+
+
 
             ],
           ),

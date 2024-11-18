@@ -74,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
             authToken: widget.authToken,
             userId: widget.userId,
             username: widget.username,
+            channelName: channelInfo['name'],
           ),
         ),
       );

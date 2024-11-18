@@ -72,6 +72,7 @@ Future<void> navigateToChat(String channelId) async {
             authToken: widget.authToken,
             userId: widget.userId,
             username: widget.username,
+            channelName: channelInfo['name'],
             
           ),
         ),
