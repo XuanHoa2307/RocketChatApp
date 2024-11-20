@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:rocketchatapp/services/api_get_channel.dart';
+import 'package:rocketchatapp/services/api_message.dart';
+import 'package:rocketchatapp/services/api_post_channel.dart';
 import 'package:rocketchatapp/widgets/message_widget.dart';
 import '../services/api_service.dart';
 
@@ -29,6 +32,9 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final ApiService apiService = ApiService();
+  final ApiServiceGetChannel apiServiceGetChannel = ApiServiceGetChannel();
+  final ApiServicePostChannel apiServicePostChannel = ApiServicePostChannel();
+  final ApiServiceMessage apiServiceMessage = ApiServiceMessage();
   final TextEditingController messageController = TextEditingController();
   bool isSending = false;
   late Timer _messageFetchTimer;
@@ -66,7 +72,7 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    final newMessages = await apiService.syncMessages(
+    final newMessages = await apiServiceMessage.syncMessages(
       authToken: widget.authToken,
       userId: widget.userId,
       roomId: widget.roomId,
@@ -95,7 +101,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> checkIfJoined() async {
     try {
       final joinedChannels =
-          await apiService.getJoinedChannels(widget.authToken, widget.userId);
+          await apiServiceGetChannel.getJoinedChannels(widget.authToken, widget.userId);
       setState(() {
         isJoined = joinedChannels.any((channel) => channel['_id'] == widget.roomId);
       });
@@ -116,7 +122,7 @@ class _ChatScreenState extends State<ChatScreen> {
     bool hasMore = true;
 
     while (hasMore) {
-      final fetchedMessages = await apiService.getMessagesWithAuth(
+      final fetchedMessages = await apiServiceMessage.getMessagesWithAuth(
         widget.authToken,
         widget.userId,
         widget.roomId,
@@ -164,11 +170,11 @@ class _ChatScreenState extends State<ChatScreen> {
 Future<void> sendMessage() async {
   if (messageController.text.isNotEmpty) {
     setState(() {
-      isSending = true; // Hiển thị trạng thái gửi
+      isSending = true; 
     });
 
     try {
-      await apiService.sendMessageWithAuth(
+      await apiServiceMessage.sendMessageWithAuth(
         widget.authToken,
         widget.userId,
         widget.roomId,
@@ -192,7 +198,7 @@ Future<void> sendMessage() async {
   /// Join channel
   Future<void> joinChannel() async {
     try {
-      await apiService.joinChannel(widget.authToken, widget.userId, widget.roomId);
+      await apiServicePostChannel.joinChannel(widget.authToken, widget.userId, widget.roomId);
       setState(() {
         isJoined = true;
 
@@ -241,7 +247,7 @@ Future<void> sendMessage() async {
                           margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
                           child: CircleAvatar(
                             radius: 16,
-                            backgroundColor: Colors.blue[300], // Màu nền avatar
+                            backgroundColor: Colors.blue[300], 
                             child: const Icon(Icons.person, size: 16, color: Colors.white),
                           ),
                         ),
@@ -315,8 +321,6 @@ Future<void> sendMessage() async {
       ),
     ],
   ),
-
-
 
             ],
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rocketchatapp/screens/home_screen.dart';
-import 'package:rocketchatapp/services/api_service.dart';
+import 'package:rocketchatapp/services/api_authenticate.dart';
+//import 'package:rocketchatapp/services/api_service.dart';
 import 'package:rocketchatapp/widgets/login_widget.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,7 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final ApiService apiService = ApiService();
+  final ApiServiceAuthenticate apiServiceAuthenticate = ApiServiceAuthenticate();
   bool rememberMe = false; 
   bool _isPasswordVisible = false; 
 
@@ -30,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       
-      final response = await apiService.loginWithUsernamePassword(username, password);
+      final response = await apiServiceAuthenticate.loginWithUsernamePassword(username, password);
       final authToken = response['authToken'];
       final userId = response['userId'];
       final usernameRes = response['username'];

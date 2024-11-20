@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rocketchatapp/screens/chat_screen.dart';
+import 'package:rocketchatapp/services/api_get_channel.dart';
 import '../services/api_service.dart';
 import '../widgets/channel_widget.dart';
 
@@ -21,6 +22,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final ApiService apiService = ApiService();
+  final ApiServiceGetChannel apiServiceGetChannel = ApiServiceGetChannel();
   List<dynamic> allChannels = []; // Danh sách tất cả kênh từ API
   List<dynamic> filteredChannels = []; // Danh sách sau khi lọc
   bool isLoading = false;
@@ -39,7 +41,7 @@ class _SearchScreenState extends State<SearchScreen> {
   });
 
   try {
-    final response = await apiService.getListChannels(widget.authToken, widget.userId);
+    final response = await apiServiceGetChannel.getListChannels(widget.authToken, widget.userId);
     final fetchedChannels = response['channels'] ?? []; // Lấy danh sách kênh từ API
     print('Fetched Channels: $fetchedChannels'); // Log danh sách trả về
     setState(() {
@@ -57,7 +59,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
 Future<void> navigateToChat(String channelId) async {
     try {
-      final channelInfo = await apiService.getChannelInformation(
+      final channelInfo = await apiServiceGetChannel.getChannelInformation(
         widget.authToken,
         widget.userId,
         channelId,

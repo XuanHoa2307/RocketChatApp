@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rocketchatapp/screens/login_screen.dart';
 import 'package:rocketchatapp/screens/search_screen.dart';
+import 'package:rocketchatapp/services/api_authenticate.dart';
+import 'package:rocketchatapp/services/api_get_channel.dart';
+import 'package:rocketchatapp/services/api_post_channel.dart';
 import '../services/api_service.dart';
 import '../widgets/channel_widget.dart';
 import '../widgets/home_widget.dart';
@@ -25,6 +28,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ApiService apiService = ApiService();
+  final ApiServiceAuthenticate apiServiceAuthenticate = ApiServiceAuthenticate();
+  final ApiServiceGetChannel apiServiceGetChannel = ApiServiceGetChannel();
+  final ApiServicePostChannel apiServicePostChannel = ApiServicePostChannel();
   List<dynamic> channels = [];
   bool isLoading = false;
   String selectedItem = 'Chat';
@@ -43,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final fetchedChannelsJoined =
-          await apiService.getJoinedChannels(widget.authToken, widget.userId);
+          await apiServiceGetChannel.getJoinedChannels(widget.authToken, widget.userId);
       setState(() {
         channels = fetchedChannelsJoined;
       });
@@ -58,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> navigateToChat(String channelId) async {
     try {
-      final channelInfo = await apiService.getChannelInformation(
+      final channelInfo = await apiServiceGetChannel.getChannelInformation(
         widget.authToken,
         widget.userId,
         channelId,
@@ -108,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
               if (channelName.isNotEmpty) {
                 try {
                   Navigator.pop(context);
-                  await apiService.createChannel(
+                  await apiServicePostChannel.createChannel(
                       widget.authToken, widget.userId, channelName);
                   fetchChannelsJoined();
                 } catch (e) {
@@ -125,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> logOut() async {
     try {
-      await apiService.logOut(widget.authToken, widget.userId);
+      await apiServiceAuthenticate.logOut(widget.authToken, widget.userId);
       
     } catch (e) {
       print('Error logging out: $e');
