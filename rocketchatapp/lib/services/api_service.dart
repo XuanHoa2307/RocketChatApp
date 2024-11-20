@@ -5,7 +5,7 @@ class ApiService {
   final String baseUrl = 'http://10.10.10.20:3000/api/v1';
   //final String baseUrl = 'https://open.rocket.chat/api/v1';
 
-  /*Future<List<dynamic>> fetchRooms(String authToken, String userId) async {
+  Future<List<dynamic>> fetchRooms(String authToken, String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/rooms.get'),
       headers: {
@@ -49,7 +49,7 @@ class ApiService {
       print('Error Response: ${response.body}');
       throw Exception('Failed to update permissions');
     }
-  }*/
+  }
 
 
 // END
