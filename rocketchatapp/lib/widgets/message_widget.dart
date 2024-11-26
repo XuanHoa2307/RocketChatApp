@@ -58,7 +58,9 @@ class MessageWidget extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isCurrentUser ? Colors.blue[100] : Colors.grey.shade300,
+                  color: isCurrentUser
+                      ? Colors.lightGreenAccent.shade100 // Màu xanh lá sáng
+                      : Colors.blue[100],// Màu xanh lá cho người khác
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(10),
                     topRight: const Radius.circular(10),
@@ -72,7 +74,10 @@ class MessageWidget extends StatelessWidget {
                 ),
                 child: Text(
                   message,
-                  style: const TextStyle(fontSize: 16),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'Roboto', // Font hỗ trợ Unicode
+                  ),
                 ),
               );
             },

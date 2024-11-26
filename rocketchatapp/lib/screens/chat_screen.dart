@@ -37,7 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ApiServiceMessage apiServiceMessage = ApiServiceMessage();
   final TextEditingController messageController = TextEditingController();
   bool isSending = false;
-  late Timer _messageFetchTimer;
+  //late Timer _messageFetchTimer;
   DateTime? lastMessageTimestamp;
   
   List<dynamic> messages = [];
@@ -50,19 +50,38 @@ class _ChatScreenState extends State<ChatScreen> {
     fetchMessages(); // Lấy tin nhắn
     checkIfJoined(); // Kiểm tra đã join hay chưa
     
+
+    // Bắt đầu Long Polling
+    startLongPolling();
+
     // Tạo timer để fetch messages mỗi 3 giây
-    _messageFetchTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+    /*_messageFetchTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       fetchNewMessages(); // Fetch chỉ các tin nhắn mới
-    });
+    });*/
 
   }
 
   @override
   void dispose() {
-    _messageFetchTimer.cancel(); // Hủy Timer
+    //_messageFetchTimer.cancel(); // Hủy Timer
     messageController.dispose(); // Dọn dẹp TextEditingController
     super.dispose();
   }
+
+
+  void startLongPolling() async {
+  while (mounted) { // Đảm bảo widget vẫn còn hoạt động
+    try {
+      // Gửi yêu cầu Long Polling để lấy tin nhắn mới
+      await fetchNewMessages();
+    } catch (e) {
+      print('Lỗi trong quá trình long polling: $e');
+    }
+
+    // Không cần thêm thời gian chờ vì server sẽ timeout sau 30 giây
+  }
+}
+
 
   // Lấy tin nhắn mới
   Future<void> fetchNewMessages() async {
@@ -266,68 +285,67 @@ Future<void> sendMessage() async {
             ),
 
               Row(
-  children: [
-    Expanded(
-      child: Container(
-        margin: const EdgeInsets.only(left: 10, bottom: 10, top: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        decoration: BoxDecoration(
-          color: Colors.white, 
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3), 
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 3), 
-            ),
-          ],
-          border: Border.all(
-            color: Colors.grey.shade100,
-            width: 1.5, 
-          ),
-        ),
-        child: TextField(
-          controller: messageController,
-          enabled: isJoined,
-          decoration: InputDecoration(
-            hintText: isSending ? 'Sending...' : 'Type your message here...',
-            hintStyle: TextStyle(color: isJoined ? Colors.grey : Colors.grey.shade400, fontFamily: 'Time New Roman'),
-            border: InputBorder.none,
-          ),
-        ),
-      ),
-    ),
-    const SizedBox(width: 10),
-    Container(
-      margin: const EdgeInsets.only(right: 10, bottom: 10, top: 10),
-      child: InkWell(
-        onTap: () async {
-          if (isJoined) {
-            await sendMessage();
-          } else {
-            await joinChannel();
-          }
-        },
-        child: CircleAvatar(
-          radius: 25,
-          backgroundColor: Colors.blue,
-          child: Icon(
-            isJoined ? Icons.send : Icons.login,
-            color: Colors.white,
-            ),
-          ),
-        ),
-      ),
-    ],
-  ),
-
+              children: [
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 10, bottom: 10, top: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white, 
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3), 
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3), 
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.grey.shade100,
+                        width: 1.5, 
+                      ),
+                    ),
+                    child: TextField(
+                      controller: messageController,
+                      enabled: isJoined,
+                      decoration: InputDecoration(
+                        hintText: isSending ? 'Sending...' : 'Type your message here...',
+                        hintStyle: TextStyle(color: isJoined ? Colors.grey : Colors.grey.shade400, fontFamily: 'Time New Roman'),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  margin: const EdgeInsets.only(right: 10, bottom: 10, top: 10),
+                  child: InkWell(
+                    onTap: () async {
+                      if (isJoined) {
+                        await sendMessage();
+                      } else {
+                        await joinChannel();
+                      }
+                    },
+                    child: CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.blue,
+                      child: Icon(
+                        isJoined ? Icons.send : Icons.login,
+                        color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-          if (isLoading)
+          /*if (isLoading)
             const Center(
               child: CircularProgressIndicator(),
-            ),
+            ),*/
         ],
       ),
     );
