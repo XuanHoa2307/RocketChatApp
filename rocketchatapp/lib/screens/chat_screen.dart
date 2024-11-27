@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:rocketchatapp/services/api_get_channel.dart';
 import 'package:rocketchatapp/services/api_message.dart';
 import 'package:rocketchatapp/services/api_post_channel.dart';
 import 'package:rocketchatapp/widgets/message_widget.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import '../services/api_service.dart';
+
 
 class ChatScreen extends StatefulWidget {
   final String authToken;
@@ -36,6 +39,9 @@ class _ChatScreenState extends State<ChatScreen> {
   final ApiServicePostChannel apiServicePostChannel = ApiServicePostChannel();
   final ApiServiceMessage apiServiceMessage = ApiServiceMessage();
   final TextEditingController messageController = TextEditingController();
+  
+  late WebSocketChannel channel;
+
   bool isSending = false;
   //late Timer _messageFetchTimer;
   DateTime? lastMessageTimestamp;
@@ -47,12 +53,13 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _connectToWebSocket(); // Kết nối tới WebSocket
     fetchMessages(); // Lấy tin nhắn
     checkIfJoined(); // Kiểm tra đã join hay chưa
     
 
     // Bắt đầu Long Polling
-    startLongPolling();
+    //startLongPolling();
 
     // Tạo timer để fetch messages mỗi 3 giây
     /*_messageFetchTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
@@ -63,13 +70,110 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    channel.sink.close(1000); // Normal Closure
+
     //_messageFetchTimer.cancel(); // Hủy Timer
     messageController.dispose(); // Dọn dẹp TextEditingController
     super.dispose();
   }
 
+late Timer _pingTimer;
 
-  void startLongPolling() async {
+void _connectToWebSocket() {
+  const wsUrl = 'ws://10.10.10.20:3000/websocket';
+  channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+
+  // Gửi yêu cầu kết nối
+  channel.sink.add(jsonEncode({
+    "msg": "connect",
+    "version": "1",
+    "support": ["1"],
+  }));
+
+  // Bắt đầu gửi ping định kỳ mỗi 30 giây
+  _pingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    print('Sending ping...');
+    channel.sink.add(jsonEncode({"msg": "ping"}));
+  });
+
+  // Lắng nghe các sự kiện từ WebSocket
+  channel.stream.listen((data) {
+    final decoded = jsonDecode(data);
+    print('Received: $decoded');
+
+    // Nếu server gửi ping
+    if (decoded['msg'] == 'ping') {
+      print('Received ping, sending pong...');
+      channel.sink.add(jsonEncode({"msg": "pong"}));
+    }
+
+    // Nếu kết nối thành công
+    if (decoded['msg'] == 'connected') {
+      _authenticateAndSubscribe();
+    }
+
+    // Kiểm tra phản hồi "ready"
+    if (decoded['msg'] == 'ready' && decoded['subs'].contains(widget.roomId)) {
+      print('Successfully subscribed to stream-room-messages!');
+    }
+
+    // Nhận tin nhắn mới
+    if (decoded['collection'] == 'stream-room-messages') {
+      final newMessage = decoded['fields']['args'][0];
+      print('New message received: $newMessage');
+      setState(() {
+        messages.insert(0, newMessage); // Thêm tin nhắn mới vào danh sách
+      });
+    }
+  }, onError: (error) {
+    print('WebSocket error: $error');
+  }, onDone: () {
+    print('WebSocket connection closed');
+    _pingTimer.cancel(); // Dừng ping khi kết nối bị đóng
+  });
+}
+
+
+void _authenticateAndSubscribe() {
+  // Xác thực WebSocket
+  channel.sink.add(jsonEncode({
+    "msg": "method",
+    "method": "login",
+    "id": "login-id",
+    "params": [
+      {
+        "resume": widget.authToken, // Dùng authToken để xác thực
+      }
+    ],
+  }));
+
+  // Đăng ký sự kiện stream-room-messages
+  channel.sink.add(jsonEncode({
+    "msg": "sub",
+    "id": widget.roomId, // Sử dụng roomId làm unique-id
+    "name": "stream-room-messages",
+    "params": [
+      widget.roomId,
+      false,
+    ],
+  }));
+}
+
+  void _subscribeToMessages() {
+  channel.sink.add(jsonEncode({
+    "msg": "sub",
+    "id": widget.roomId, // Sử dụng roomId làm unique-id
+    "name": "stream-room-messages",
+    "params": [
+      widget.roomId,
+      false,
+    ],
+  }));
+}
+
+
+
+  /*void startLongPolling() async {
   while (mounted) { // Đảm bảo widget vẫn còn hoạt động
     try {
       // Gửi yêu cầu Long Polling để lấy tin nhắn mới
@@ -80,7 +184,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Không cần thêm thời gian chờ vì server sẽ timeout sau 30 giây
   }
-}
+}*/
 
 
   // Lấy tin nhắn mới
